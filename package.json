@@ -1,0 +1,32 @@
+{
+  "name": "serverx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js --trace-sync-io",
+    "pretest": "eslint --ignore-path .gitignore . --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-eslint": "^10.0.1",
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "express-ip": "^1.0.3",
+    "express-validator": "^5.3.1",
+    "helmet": "^3.16.0",
+    "jsonwebtoken": "^8.5.1",
+    "kue": "^0.11.6",
+    "mongoose": "^5.5.1",
+    "rate-limiter-flexible": "^0.25.2",
+    "redis": "^2.8.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-strongloop": "^2.1.0"
+  }
+}
