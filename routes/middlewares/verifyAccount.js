@@ -11,6 +11,7 @@ function verifyToken(req, res, next) {
     if (err) {
       return res.json({ status: 400, success: false, error: 'Unauthorized access' });
     }
+    req.username = decoded.username;
     next();
   });
 }

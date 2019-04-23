@@ -5,12 +5,13 @@ const Countries = require('../../db/models/countries');
 const States = require('../../db/models/states');
 const User = require('../../db/models/users');
 const Cities = require('../../db/models/cities');
-const { body, validationResult } = require('express-validator/check');
+const mongoose = require('mongoose');
+const { query, body, validationResult } = require('express-validator/check');
 
 router.post('/createaccount', [
   body('username', 'A valid Username is required').exists().isLength({ min: 1 }),
   body('password', 'A valid alphanumeric password is required').exists().isLength({ min: 6, max: 18 }).isAlphanumeric(),
-  body('salt', 'A valid salt is required').exists().isLength({ min: 1, max: 10}),
+  body('salt', 'A valid salt is required').exists().isLength({ min: 1, max: 10 }),
   body('ips', 'A valid IP is required').optional().isIP(),
   body('type', 'A valid type is required').exists().isIn(['gateway', 'wallet']),
   body('callback_url', 'A valid callback URL is required').exists().isLength({ min: 1 }),
@@ -58,11 +59,11 @@ router.post('/addcountry', [
     return res.json({ status: 400, success: false, error: errors.array() });
   }
 
-  let { country_id, country_name} = req.body;
+  let { country_id, country_name } = req.body;
 
-  let duplicateCountry = await Countries.findOne({ $or: [ { country_name: country_name }, { country_id: country_id } ] }).exec();
+  let duplicateCountry = await Countries.findOne({ $or: [{ country_name: country_name }, { country_id: country_id }] }).exec();
 
-  if (duplicateCountry){
+  if (duplicateCountry) {
     return res.json({ status: 400, success: false, error: 'Country already exists' });
   }
 
@@ -72,7 +73,7 @@ router.post('/addcountry', [
   });
 
   country.save().then(doc => {
-    return res.json({ status: 200, success: true, error: false});
+    return res.json({ status: 200, success: true, error: false });
   }).catch(err => {
     return res.json({ status: 400, success: false, error: err.message });
   });
@@ -90,11 +91,11 @@ router.post('/addstate', [
     return res.json({ status: 400, success: false, error: errors.array() });
   }
 
-  let { state_id, state_name} = req.body;
+  let { state_id, state_name } = req.body;
 
-  let duplicateState = await States.findOne({ $or: [ { state_name: state_name }, { state_id: state_id } ] }).exec();
+  let duplicateState = await States.findOne({ $or: [{ state_name: state_name }, { state_id: state_id }] }).exec();
 
-  if (duplicateState){
+  if (duplicateState) {
     return res.json({ status: 400, success: false, error: 'State already exists' });
   }
 
@@ -104,7 +105,7 @@ router.post('/addstate', [
   });
 
   state.save().then(doc => {
-    return res.json({ status: 200, success: true, error: false});
+    return res.json({ status: 200, success: true, error: false });
   }).catch(err => {
     return res.json({ status: 400, success: false, error: err.message });
   });
@@ -122,11 +123,11 @@ router.post('/addcity', [
     return res.json({ status: 400, success: false, error: errors.array() });
   }
 
-  let { city_id, city_name} = req.body;
+  let { city_id, city_name } = req.body;
 
-  let duplicateCity = await Cities.findOne({ $or: [ { city_name: city_name }, { city_id: city_id } ] }).exec();
+  let duplicateCity = await Cities.findOne({ $or: [{ city_name: city_name }, { city_id: city_id }] }).exec();
 
-  if (duplicateCity){
+  if (duplicateCity) {
     return res.json({ status: 400, success: false, error: 'State already exists' });
   }
 
@@ -143,8 +144,7 @@ router.post('/addcity', [
 
 });
 
-router.get('/getallusers', [
-], async(req, res) => {
+router.get('/getallusers', [], async(req, res) => {
 
   const errors = validationResult(req);
 
@@ -153,20 +153,20 @@ router.get('/getallusers', [
   }
 
   try {
-    var user = await User.find().populate('address.country_id','address.state_id','address.city_id').exec();
+    var user = await User.find().populate('address.country_id', 'address.state_id', 'address.city_id').exec();
 
-    return res.json({ status: 200, success: true, result: user});
+    return res.json({ status: 200, success: true, result: user });
 
   } catch (err) {
-  	console.log(err.message);
+    console.log(err.message);
     return res.json({ status: 400, success: false, error: 'Something went wrong, Try again later !' });
   }
 });
 
 router.get('/getuser', [
-  query('user_id', 'A valid User id is required').exists().isLength({min: 24, max: 24}),
+  query('user_id', 'A valid User id is required').exists().isLength({ min: 24, max: 24 }),
 
-], verifyAccount, async(req, res) => {
+], async(req, res) => {
 
   const errors = validationResult(req);
 
@@ -177,21 +177,20 @@ router.get('/getuser', [
   let { user_id } = req.query;
 
   try {
-    var user = await User.findOne({_id: mongoose.Types.ObjectId(user_id)}).populate('address.country_id','address.state_id','address.city_id').exec();
+    var user = await User.findOne({ _id: mongoose.Types.ObjectId(user_id) }).populate('address.country_id', 'address.state_id', 'address.city_id').exec();
 
     if (!user) {
       return res.json({ status: 400, success: false, error: 'User does not exist' });
     }
 
-    return res.json({ status: 200, success: true, result: user});
+    return res.json({ status: 200, success: true, result: user });
 
   } catch (err) {
     return res.json({ status: 400, success: false, error: 'Something went wrong, Try again later !' });
   }
 });
 
-router.get('/getallcountries', [
-], async(req, res) => {
+router.get('/getallcountries', [], async(req, res) => {
 
   const errors = validationResult(req);
 
@@ -202,16 +201,15 @@ router.get('/getallcountries', [
   try {
     var user = await Countries.find().exec();
 
-    return res.json({ status: 200, success: true, result: user});
+    return res.json({ status: 200, success: true, result: user });
 
   } catch (err) {
-  	console.log(err.message);
+    console.log(err.message);
     return res.json({ status: 400, success: false, error: 'Something went wrong, Try again later !' });
   }
 });
 
-router.get('/getallstates', [
-], async(req, res) => {
+router.get('/getallstates', [], async(req, res) => {
 
   const errors = validationResult(req);
 
@@ -222,16 +220,15 @@ router.get('/getallstates', [
   try {
     var user = await States.find().exec();
 
-    return res.json({ status: 200, success: true, result: user});
+    return res.json({ status: 200, success: true, result: user });
 
   } catch (err) {
-  	console.log(err.message);
+    console.log(err.message);
     return res.json({ status: 400, success: false, error: 'Something went wrong, Try again later !' });
   }
 });
 
-router.get('/getallcities', [
-], async(req, res) => {
+router.get('/getallcities', [], async(req, res) => {
 
   const errors = validationResult(req);
 
@@ -242,10 +239,10 @@ router.get('/getallcities', [
   try {
     var user = await States.find().exec();
 
-    return res.json({ status: 200, success: true, result: user});
+    return res.json({ status: 200, success: true, result: user });
 
   } catch (err) {
-  	console.log(err.message);
+    console.log(err.message);
     return res.json({ status: 400, success: false, error: 'Something went wrong, Try again later !' });
   }
 });

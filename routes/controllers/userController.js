@@ -56,6 +56,7 @@ router.post('/create', [
       street_two: street_two,
     },
     group: group,
+    ip: ip,
   });
 
   let userId;
@@ -147,6 +148,7 @@ router.post('/update', [
     user.address.city_id = city != null ? city : user.address.city_id;
     user.address.street_one = street_one != null ? street_one : user.address.street_one;
     user.address.street_two = street_two != null ? street_two : user.address.street_two;
+    user.ip = ip != null ? ip : user.ip;
     user.updated_at = new Date();
 
     return user.save();

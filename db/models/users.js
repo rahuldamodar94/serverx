@@ -54,6 +54,10 @@ var userSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  ip: {
+    type: String,
+    required: true,
+  },
   verification_status: {
     type: String,
     default: 'pending',
