@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.441.0",
     "babel-eslint": "^10.0.1",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
@@ -23,7 +24,8 @@
     "kue": "^0.11.6",
     "mongoose": "^5.5.1",
     "rate-limiter-flexible": "^0.25.2",
-    "redis": "^2.8.0"
+    "redis": "^2.8.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "eslint": "^5.16.0",

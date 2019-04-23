@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const express = require('express');
 const rateLimiterRedisMiddleware = require('./middlewares/rateLimiterRedis');
 const UserController = require('./controllers/userController');
+const VerificationController = require('./controllers/verificationController');
 
 const app = express();
 app.use(rateLimiterRedisMiddleware);
@@ -26,6 +27,8 @@ app.use(expressip().getIpInfoMiddleware);
 app.use(helmet());
 
 // User api
-app.use('/api/user', UserController);
+app.use('/api/v1/users', UserController);
+// Verification api
+app.use('/api/v1/verifications', VerificationController);
 
 module.exports = app;

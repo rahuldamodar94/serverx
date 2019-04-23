@@ -8,7 +8,7 @@ var documentSchema = mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  verfication_id: {
+  verification_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Verfication',
     required: true,

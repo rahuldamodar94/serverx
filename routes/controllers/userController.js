@@ -5,7 +5,7 @@ const User = require('../../db/models/users');
 const { param, body, validationResult } = require('express-validator/check');
 
 
-router.post('/createuser', [
+router.post('/create', [
   body('username', 'A valid Username is required').exists().isLength({min: 1}),
   body('email', 'A valid Email address is required').exists().isEmail(),
   body('first_name', 'A valid First name is required').exists().isLength({min: 1}),
@@ -64,6 +64,7 @@ router.post('/createuser', [
 
 });
 
+
 router.get('/getuser', [
   param('user_id', 'A valid User id is required').exists().isLength({min: 24, max: 24}),
 
@@ -81,7 +82,8 @@ router.get('/getuser', [
   }
 });
 
-router.post('/updateuser', [
+
+router.post('/update', [
   body('user_id', 'A valid User id is required').exists().isLength({min: 24, max: 24}),
   body('email', 'A valid Email address is required').optional().isEmail(),
   body('country', 'A valid Country id is required').optional().isLength({min: 24, max: 24}),
