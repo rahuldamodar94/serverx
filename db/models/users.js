@@ -21,9 +21,9 @@ var userSchema = mongoose.Schema({
     },
   },
   name: {
-    first: String,
-    middle: String,
-    last: String,
+    first_name: String,
+    middle_name: String,
+    last_name: String,
   },
   address: {
     country_id: {

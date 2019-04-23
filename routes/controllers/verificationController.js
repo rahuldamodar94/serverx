@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const Documents = require('../../db/models/documents');
+const verifyAccount = require('../middlewares/verifyAccount');
 const Verifications = require('../../db/models/verifications');
 const User = require('../../db/models/users');
-const { body, validationResult } = require('express-validator/check');
+const { query, body, validationResult } = require('express-validator/check');
 var AWS = require('aws-sdk');
 
 const s3 = new AWS.S3({
@@ -20,7 +21,7 @@ router.post('/verify', [
   body('user_id', 'A valid User id is required').exists().isLength({ min: 24, max: 24 }),
   body('type', 'A valid document is required').exists().isIn(['passport', 'id', 'driving_license', 'utility_bill']),
 
-], async(req, res) => {
+], verifyAccount, async(req, res) => {
 
   const errors = validationResult(req);
 
@@ -38,13 +39,14 @@ router.post('/verify', [
     Body: fileData,
   };
 
-  let validUser = await User.findOne({ _id: mongoose.Types.ObjectId(user_id) });
+  let validUser = await User.findOne({ _id: mongoose.Types.ObjectId(user_id) }).exec();
 
   if (!validUser) {
     return res.json({ status: 400, success: false, error: 'User does not exist' });
   }
 
   s3.putObject(params, function(err, resp) {
+
     if (err) {
       return res.json({ status: 400, success: false, error: err.message });
     }
@@ -90,26 +92,45 @@ router.post('/verify', [
 });
 
 
-// var params = {
-//   Bucket: "examplebucket",
-//   Key: "HappyFace.jpg"
-//  };
-//  s3.getObject(params, function(err, data) {
-//    if (err) console.log(err, err.stack); // an error occurred
-//    else     console.log(data);           // successful response
+router.get('/getdoc', [
+  query('user_id', 'A valid User id is required').exists().isLength({ min: 24, max: 24 }),
 
-//    data = {
-//     AcceptRanges: "bytes",
-//     ContentLength: 3191,
-//     ContentType: "image/jpeg",
-//     ETag: "\"6805f2cfc46c0f04559748bb039d69ae\"",
-//     LastModified: <Date Representation>,
-//     Metadata: {
-//     },
-//     TagCount: 2,
-//     VersionId: "null"
-//    }
+], verifyAccount, async(req, res) => {
 
-//  });
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.json({ status: 400, success: false, error: errors.array() });
+  }
+
+  try {
+
+    let { user_id } = req.query;
+
+    let documents = await Documents.findOne({ user_id: mongoose.Types.ObjectId(user_id) }).exec();
+
+    if (!documents) {
+      return res.json({ status: 400, success: false, error: 'User does not exist' });
+    }
+
+    let params = {
+      Bucket: 'sxv',
+      Key: documents.location,
+    };
+
+    s3.getObject(params, function(err, data) {
+      if (err) {
+        return res.json({ status: 400, success: false, error: 'Document does not exist' });
+      }
+
+      return res.json({ status: 200, success: true, result: Buffer.from(data.Body, 'binary').toString() });
+    });
+
+
+  } catch (err) {
+    return res.json({ status: 400, success: false, error: 'Something went wrong, Try again later !' });
+  }
+});
+
 
 module.exports = router;

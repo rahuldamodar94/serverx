@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 var stateSchema = mongoose.Schema({
-  stateId: {
+  state_id: {
     type: String,
     required: true,
     unique: true,
   },
-  stateName: {
+  state_name: {
     type: String,
     required: true,
     unique: true,

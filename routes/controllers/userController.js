@@ -2,7 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
 const User = require('../../db/models/users');
-const { param, body, validationResult } = require('express-validator/check');
+const verifyAccount = require('../middlewares/verifyAccount');
+const ValidationAddress = require('../../db/models/validationAddress');
+const { query, body, validationResult } = require('express-validator/check');
 
 
 router.post('/create', [
@@ -21,7 +23,7 @@ router.post('/create', [
   body('address').optional(),
   body('public_key').optional(),
 
-], async(req, res) => {
+], verifyAccount, async(req, res) => {
 
   const errors = validationResult(req);
 
@@ -56,8 +58,22 @@ router.post('/create', [
     group: group,
   });
 
+  let userId;
+
   user.save().then(doc => {
-    return res.json({ status: 200, success: true, error: false, user_id: doc._id});
+
+    userId = doc._id;
+
+    let validationAddress = ValidationAddress({
+      user_id: userId,
+      address: address,
+      public_key: public_key,
+    });
+
+    return validationAddress.save();
+
+  }).then(doc => {
+    return res.json({ status: 200, success: true, error: false, user_id: userId});
   }).catch(err => {
     return res.json({ status: 400, success: false, error: err.message });
   });
@@ -66,17 +82,29 @@ router.post('/create', [
 
 
 router.get('/getuser', [
-  param('user_id', 'A valid User id is required').exists().isLength({min: 24, max: 24}),
+  query('user_id', 'A valid User id is required').exists().isLength({min: 24, max: 24}),
 
-], async(req, res) => {
+], verifyAccount, async(req, res) => {
 
-  let { user_id } = req.param;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.json({ status: 400, success: false, error: errors.array() });
+  }
+
+  let { user_id } = req.query;
 
   try {
-    var user = await User.findOne({_id: user_id}).exec();
-    return res.json({ status: 200, success: true, first_name: user.first_name, last_name: user.last_name,
-      middle_name: user.middle_name, email: user.email, group: user.group, country: user.country_id,
-      state: user.state_id, city: user.city_id });
+    var user = await User.findOne({_id: mongoose.Types.ObjectId(user_id)}).exec();
+
+    if (!user) {
+      return res.json({ status: 400, success: false, error: 'User does not exist' });
+    }
+
+    return res.json({ status: 200, success: true, first_name: user.name.first_name, last_name: user.name.last_name,
+      middle_name: user.name.middle_name, email: user.email, group: user.group, country: user.address.country_id,
+      state: user.address.state_id, city: user.address.city_id });
+
   } catch (err) {
     return res.json({ status: 400, success: false, error: 'Something went wrong, Try again later !' });
   }
@@ -95,9 +123,21 @@ router.post('/update', [
   body('address').optional(),
   body('public_key').optional(),
 
-], async(req, res) => {
+], verifyAccount, async(req, res) => {
 
   let { user_id, email, country, state, city, street_one, street_two, ip, address, public_key } = req.body;
+
+  let validUser = await User.findOne({ _id: mongoose.Types.ObjectId(user_id) }).exec();
+
+  if (!validUser) {
+    return res.json({ status: 400, success: false, error: 'User does not exist' });
+  }
+
+  let duplicateEmail = await User.findOne({ email: email }).exec();
+
+  if (duplicateEmail){
+    return res.json({ status: 400, success: false, error: 'Email already exists' });
+  }
 
   User.findOne({ _id: user_id }).then((user) => {
 
@@ -107,10 +147,23 @@ router.post('/update', [
     user.address.city_id = city != null ? city : user.address.city_id;
     user.address.street_one = street_one != null ? street_one : user.address.street_one;
     user.address.street_two = street_two != null ? street_two : user.address.street_two;
-    user.ip = ip != null ? ip : user.ip;
+    user.updated_at = new Date();
 
     return user.save();
   }).then(doc => {
+
+    return ValidationAddress.findOne({ user_id: mongoose.Types.ObjectId(user_id) });
+
+  }).then(validation => {
+
+    validation.user_id = user_id;
+    validation.address = address != null ? address : validation.address;
+    validation.public_key = public_key != null ? public_key : validation.public_key;
+    validation.updated_at = new Date();
+
+    return validation.save();
+
+  }).then(result => {
     return res.json({ status: 200, success: true, error: false});
   }).catch((err) => {
     return res.json({ status: 400, success: false, error: err.message });

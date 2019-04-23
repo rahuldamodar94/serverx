@@ -6,6 +6,9 @@ const express = require('express');
 const rateLimiterRedisMiddleware = require('./middlewares/rateLimiterRedis');
 const UserController = require('./controllers/userController');
 const VerificationController = require('./controllers/verificationController');
+const TransactionController = require('./controllers/transactionController');
+const AdminController = require('./controllers/adminController');
+const AccountsController = require('./controllers/accountsController');
 
 const app = express();
 app.use(rateLimiterRedisMiddleware);
@@ -30,5 +33,11 @@ app.use(helmet());
 app.use('/api/v1/users', UserController);
 // Verification api
 app.use('/api/v1/verifications', VerificationController);
+// Verification api
+app.use('/api/v1/transactions', TransactionController);
+// Admin api
+app.use('/api/v1/admin', AdminController);
+// Accounts api
+app.use('/api/v1/accounts', AccountsController);
 
 module.exports = app;

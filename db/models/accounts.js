@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
-mongoose.Promise = global.Promise;
+var Promise = global.Promise;
 
-var userSchema = mongoose.Schema({
+var accountSchema = mongoose.Schema({
   username: {
     type: String,
     required: true,
@@ -16,11 +17,12 @@ var userSchema = mongoose.Schema({
     minlength: 6,
   },
   salt: {
-    type: String,
+    type: Number,
     required: true,
   },
   token: {
     type: String,
+    default: '',
   },
   ips: {
     type: [String],
@@ -32,10 +34,11 @@ var userSchema = mongoose.Schema({
   },
   status: {
     type: String,
-    default: 'pending',
+    default: 'active',
   },
   callaback_url: {
     type: String,
+    default: '',
   },
   createdAt: {
     type: Date,
@@ -47,6 +50,24 @@ var userSchema = mongoose.Schema({
   },
 });
 
-var User = mongoose.model('User', userSchema);
+accountSchema.pre('save', function() {
+  const account = this;
+  return new Promise((resolve, reject) => {
+    bcrypt.genSalt(account.salt, (err, salt) => {
+      if (err) {
+        reject(new Error(err));
+      }
+      bcrypt.hash(account.password, salt, (err, hash) => {
+        if (err) {
+          reject(new Error(err));
+        }
+        account.password = hash;
+        resolve(account);
+      });
+    });
+  });
+});
 
-module.exports = User;
+var Accounts = mongoose.model('Accounts', accountSchema);
+
+module.exports = Accounts;
